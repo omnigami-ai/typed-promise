@@ -132,6 +132,8 @@ send button and beside the name).
   hats (0.3) under the hold, to a 0.3 s fade.
 - Mastered around −14 LUFS.
 
+The score's sound is `music.style`: here `'synth'`, the default. For the user's product, pick by what it is: `'organic'` for plants, food and drink, and other natural or handmade things; `'synth'` (oscillators, the default) for software and tools; `'felt'` (a sparse felt piano over a sub bass and a light kit) for a quiet, minimal film. In a break (`music.breaks`) the drums, bass and lead stop and the chords play on; the film's name seeds the key (always major), the progressions and the patterns.
+
 ## Shapes
 
 - Wide: the prompt on one line at 4.6% in a long bar; the promise on one

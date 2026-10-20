@@ -1,7 +1,7 @@
 {
   "name": "omnigami-typed-promise",
   "displayName": "Typed promise",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Make a 6-second reveal shot for a launch video in square, wide and tall, with sound. A turn line lands, the brand's mark opens into a prompt bar that types one line and sends it, then the mark lands beside the product's name with a one-line promise and holds. Use when the user asks for a product reveal, a name or logo reveal, a \"type a prompt\" or \"one line is all it takes\" moment, or the turn after the problem, for a launch video of an AI tool, a search, a command-line tool or anything driven by one typed line.",
   "author": {
     "name": "omnigami",
