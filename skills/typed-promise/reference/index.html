@@ -28,7 +28,7 @@
   let W = 1920, H = 1080, U = 10.8, tall = false; // U: 1% of the frame's short side
 
   const canvas = document.getElementById('c');
-  const g = canvas.getContext('2d', { willReadFrequently: true });
+  const g = kit.textContext(canvas.getContext('2d', { willReadFrequently: true }));
 
   // ---------- ADAPT: the product's colours ----------
   // Ink is the product's world (its dark colour, or near-black); the accent is its brand colour,
@@ -71,7 +71,7 @@
   const capOf = (size) => size * 0.7; // Instrument Sans' cap height
 
   // a word slammed in: from 116% and soft to set in 2.6 steps
-  function slam(c, s, x, y, font, size, t, t0, colour, tracking) {
+  function slam(c, s, x, y, font, size, t, t0, colour, tracking) { s = kit.copyText(s);
     const d = steps(t, t0);
     if (d < 0) return;
     const e = out3(d / 2.6), k = lerp(1.16, 1, e), blur = 10 * (1 - e) ** 2, alpha = lerp(0.55, 1, Math.sqrt(e));
@@ -82,20 +82,22 @@
     c.fillStyle = colour; c.fillText(s, -w / 2, capOf(size) / 2); c.restore();
   }
   // a line whose words land one after another, a step apart
-  function line(c, text, x, y, font, size, t, t0, { colour = INK, stagger = F, align = 'left', tracking } = {}) {
-    const words = text.split(' ').filter(Boolean), space = widthOf(c, font, size, ' ', tracking);
+  function line(c, text, x, y, font, size, t, t0, { colour = INK, stagger = F, align = 'left', tracking } = {}) { text = kit.copyText(text);
+    if(kit.hasCJK(text))tracking=0;
+    const words = kit.words(text, ' ').filter(Boolean), space = widthOf(c, font, size, ' ', tracking);
     const widths = words.map((w) => widthOf(c, font, size, w, tracking));
-    const total = widths.reduce((a, b) => a + b, 0) + space * Math.max(0, words.length - 1);
+    const total = kit.hasCJK(text) ? widths.reduce((a,b)=>a+b,0) + words.slice(0,-1).reduce((n,_,i)=>n+widthOf(c,font,size,kit.wordGap(text,i),tracking),0) : widths.reduce((a, b) => a + b, 0) + space * Math.max(0, words.length - 1);
     let wx = align === 'center' ? x - total / 2 : align === 'right' ? x - total : x;
-    words.forEach((w, i) => { slam(c, w, wx, y, font, size, t, t0 + i * stagger, arrive(t, t0 + i * stagger, colour), tracking); wx += widths[i] + space; });
+    words.forEach((w, i) => { slam(c, w, wx, y, font, size, t, t0 + i * stagger, arrive(t, t0 + i * stagger, colour), tracking); wx += widths[i] + (kit.hasCJK(text) ? widthOf(c,font,size,kit.wordGap(text,i),tracking) : space); });
     return total;
   }
   // words wrapped at spaces into as few lines as fit maxW, then evened out. Two lines: the break
   // that makes the longer line shortest, a break after a comma or full stop counting as 25%
   // shorter and one that leaves a lone last word as 20% longer. More: the narrowest measure that
   // keeps that many lines.
-  function wrap(c, text, font, size, maxW, tracking) {
-    const words = text.split(' ').filter(Boolean), wd = (s) => widthOf(c, font, size, s, tracking);
+  function wrap(c, text, font, size, maxW, tracking) { text = kit.copyText(text);
+    if (kit.hasCJK(text)) return kit.fitLines(c,text,font,{maxWidth:maxW,maxLines:12,maxSize:size,minSize:size}).lines;
+    const words = kit.words(text, ' ').filter(Boolean), wd = (s) => widthOf(c, font, size, s, tracking);
     const layout = (width) => {
       const lines = []; let cur = '';
       for (const w of words) { const next = cur ? `${cur} ${w}` : w; if (cur && wd(next) > width) { lines.push(cur); cur = w; } else cur = next; }
@@ -165,7 +167,7 @@
       lines = best.two; size = Math.min(4.6 * U, room / best.w * 100);
     }
     const starts = lines.length === 1 ? [0] : [0, lines[0].length + 1]; // each line's first letter in the prompt
-    return { font, size, lines, starts, lh: size * 1.32, textW: Math.max(...lines.map((s) => widthOf(g, font, size, s, 0))) };
+    return { font, size, lines, starts, lh: kit.linePitch(V.prompt,size,size * 1.32), textW: Math.max(...lines.map((s) => widthOf(g, font, size, s, 0))) };
   }
 
   // ---- the turn (bar 0 to bar 1, beat 1): one line, then the prompt typed into the mark ----
@@ -237,7 +239,7 @@
     // the promise at 4.4% (× 1.15 in tall); a long name that had to shrink takes it down with it,
     // so the name stays about twice its size (the promise gives up a quarter at most)
     const ps0 = 4.4 * U * (tall ? 1.15 : 1), ps = clamp(size / 2, ps0 * 0.75, ps0), k = ps / ps0;
-    const lines = wrap(g, V.promise, SANS(500), ps, W * 0.86, -0.01), lh = ps * 1.3, drop = 9.5 * U * k;
+    const lines = wrap(g, V.promise, SANS(500), ps, W * 0.86, -0.01), lh = kit.linePitch(V.promise,ps,ps * 1.3), drop = 9.5 * U * k;
     const cy = H / 2 - 2 * U - (lines.length - 1) * lh / 2; // the name's baseline: the group stays centred
     return { size, ph, pw, gap, x: W / 2 - total / 2, cy, ps, lines, lh, drop };
   }
@@ -284,13 +286,13 @@
     sections: [{ from: 0, to: 2, kick: 0.75, hats: 0.55, bass: 0.6, pad: 0.55 }, { from: 2, to: 3.25, pad: 0.75, hats: 0.3 }],
   };
   const STATES = [[0, 'Turn'], [T.grow, 'Prompt'], [T.lockup, 'Name']];
-  window.template = {
+  window.template = kit.film({
     fps: FPS, duration: DURATION, sizes: SHAPES, width: W, height: H, defaults: () => ({ size: '16:9', ...DEFAULTS }), fields: FIELDS, states: STATES,
     prepare, seek: (t, values) => seek(t, values), cues, music,
     // settled moments: the turn line, the whole prompt before the send, the lockup with its promise
     keyTimes: [0.67, 2.95, 5.25, 6.4],
-  };
+  });
   const q = new URLSearchParams(location.search);
-  if (window.parent === window && !q.has('render')) prepare().then(() => { const t0 = performance.now(); const loop = () => { seek(((performance.now() - t0) / 1000) % DURATION, { size: q.get('size') || '16:9' }); requestAnimationFrame(loop); }; loop(); });
+  if (window.parent === window && !q.has('render')) window.template.prepare().then(() => { const t0 = performance.now(); const loop = () => { seek(((performance.now() - t0) / 1000) % DURATION, { size: q.get('size') || '16:9' }); requestAnimationFrame(loop); }; loop(); });
 })();
 </script>

@@ -2,7 +2,7 @@
 
 One line typed, then your name and its promise.
 
-A 6.5-second reveal: the turn lands, your mark opens into a prompt bar that types one line and sends it, then the mark settles beside your name with a one-line promise. Made for products driven by one typed line.
+A short reveal: the turn lands, your mark opens into a prompt bar that types one line and sends it, then the mark settles beside your name with a one-line promise. Made for products driven by one typed line.
 
 Watch it play live, and change its words, at [omnigami.ai/skills/typed-promise](https://omnigami.ai/skills/typed-promise).
 

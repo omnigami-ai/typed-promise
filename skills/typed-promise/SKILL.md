@@ -5,6 +5,8 @@ description: Make a 6-second reveal shot for a launch video in square, wide and 
 
 # Typed promise
 
+For Japanese, Korean or Chinese product pages, keep the copy in that language and set the film’s `lang` to the page’s `<html lang>`; bundled Noto faces and phrase breaks handle the text.
+
 One shot from a launch film: the answer to the problem in one line, the
 request typed into a bar, then the product's mark and name with its promise.
 Six seconds, in wide, square and tall, with sound. Start from the finished
